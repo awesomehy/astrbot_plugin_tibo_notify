@@ -1,0 +1,1 @@
+"""AstrBot Tibo notification plugin."""

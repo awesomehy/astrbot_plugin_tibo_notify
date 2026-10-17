@@ -1,0 +1,7 @@
+name: astrbot_plugin_tibo_notify
+display_name: Tibo 动态订阅
+desc: 通过个人只读链接接收网站已完成 AI 处理的中文动态，支持当前聊天订阅与第 N 条查询。
+version: v1.0.0
+author: awesomehy
+repo: https://github.com/awesomehy/astrbot_plugin_tibo_notify
+astrbot_version: ">=4.23.0"

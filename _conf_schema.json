@@ -1,0 +1,58 @@
+{
+  "feed_url": {
+    "description": "个人只读订阅链接",
+    "type": "string",
+    "secret": true,
+    "default": "",
+    "hint": "在 Tibo 网站账号面板生成的完整链接，包含 #token=。视为密码。AstrBot 4.23 可能明文显示；可留空并通过环境变量 TIBO_ASTRBOT_FEED_URL 配置。不要发到群聊、日志或截图中。"
+  },
+  "poll_interval_seconds": {
+    "description": "轮询间隔（秒）",
+    "type": "int",
+    "default": 300,
+    "slider": {"min": 30, "max": 86400, "step": 30},
+    "hint": "默认 300 秒，最低 30 秒，最高 86400 秒。每个插件实例共享一次增量拉取，再分发至订阅聊天。保存配置后生效。"
+  },
+  "operator_ids": {
+    "description": "群订阅操作员白名单",
+    "type": "list",
+    "default": [],
+    "hint": "每项为 平台实例ID:用户ID。AstrBot 管理员始终可以管理。群管理员身份本身不授予权限。"
+  },
+  "allow_private_subscriptions": {
+    "description": "允许私聊用户管理自己的订阅",
+    "type": "bool",
+    "default": true
+  },
+  "query_access": {
+    "description": "普通用户查询范围",
+    "type": "string",
+    "options": ["subscribed_chats", "operators", "everyone"],
+    "default": "subscribed_chats",
+    "hint": "默认仅已订阅聊天。operators 仅管理员/操作员/查询白名单；everyone 允许机器人可见的所有聊天。"
+  },
+  "query_user_ids": {
+    "description": "额外查询用户白名单",
+    "type": "list",
+    "default": [],
+    "hint": "每项为 平台实例ID:用户ID。只允许查询，不授予群订阅管理权限。"
+  },
+  "max_query_index": {
+    "description": "最多允许查询最新第几条",
+    "type": "int",
+    "default": 100,
+    "slider": {"min": 1, "max": 100, "step": 1}
+  },
+  "query_cooldown_seconds": {
+    "description": "每个聊天的查询冷却时间（秒）",
+    "type": "int",
+    "default": 5,
+    "hint": "同一群的所有成员共用冷却，最小 1 秒。全实例还限制为每秒最多一次查询。"
+  },
+  "max_subscriptions": {
+    "description": "最多订阅聊天数量",
+    "type": "int",
+    "default": 200,
+    "hint": "最小 1，最大 2000。默认 200 个；实际发送速度受平台限制。"
+  }
+}
