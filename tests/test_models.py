@@ -67,37 +67,42 @@ class ModelTests(unittest.TestCase):
     def test_render_bounded_plain_translation(self):
         text = item(1, translation="中" * 6000).render()
         self.assertLessEqual(len(text), 3500)
-        self.assertTrue(text.startswith("【重置预告：否】"))
+        self.assertTrue(text.startswith("【Codex重置预告：否】"))
         self.assertIn("原文\nOriginal", text)
         self.assertIn("内容已截断，完整内容见链接", text)
         self.assertIn("https://x.com/", text)
         self.assertEqual(item(1), type(item(1)).loads(item(1).dumps()))
 
-    def test_render_judgment_first_original_translation_dates_and_model(self):
+    def test_render_judgment_first_original_translation_dates_without_model(self):
         rendered = item(1, is_reset_announcement=True, text="Full original text", translation="完整中文翻译",
-                        published_at="2026-10-17T18:42:03.000Z", model="saved-model").render()
-        self.assertTrue(rendered.startswith("【重置预告：是】"))
+                        published_at="2026-10-17T18:42:03.000Z", model="MODEL_MUST_NOT_APPEAR").render()
+        self.assertTrue(rendered.startswith("【Codex重置预告：是】"))
         self.assertIn("中文翻译\n完整中文翻译", rendered)
         self.assertIn("原文\nFull original text", rendered)
+        self.assertLess(rendered.index("原文\n"), rendered.index("中文翻译\n"))
+        self.assertNotIn("最新第", rendered)
         self.assertIn("发布时间（UTC）：2026-10-17 18:42:03", rendered)
         self.assertIn("北京时间（UTC+8）：2026-10-18 02:42:03", rendered)
-        self.assertIn("AI 判断仅供参考（网站已保存结果，插件未重新分析）", rendered)
-        self.assertIn("翻译模型：saved-model", rendered)
+        self.assertNotIn("AI 判断", rendered)
+        self.assertNotIn("翻译模型", rendered)
+        self.assertNotIn("MODEL_MUST_NOT_APPEAR", rendered)
         self.assertTrue(rendered.endswith("https://x.com/tibo_maker/status/1"))
 
     def test_render_both_long_fields_truncate_and_preserve_footer(self):
         rendered = item(1, text="English" * 5000, translation="中文翻译" * 10000).render()
         self.assertEqual(len(rendered), 3500)
         self.assertEqual(rendered.count("内容已截断，完整内容见链接"), 2)
-        self.assertTrue(rendered.startswith("【重置预告：否】"))
+        self.assertTrue(rendered.startswith("【Codex重置预告：否】"))
         self.assertIn("发布时间（UTC）", rendered)
         self.assertIn("北京时间（UTC+8）", rendered)
-        self.assertIn("翻译模型：test-model", rendered)
+        self.assertNotIn("翻译模型", rendered)
+        self.assertNotIn("test-model", rendered)
+        self.assertNotIn("AI 判断", rendered)
         self.assertTrue(rendered.endswith("https://x.com/tibo_maker/status/1"))
 
-    def test_render_does_not_invent_missing_model_or_timezone(self):
+    def test_render_omits_model_and_does_not_invent_timezone(self):
         rendered = item(1, model="", published_at="unknown").render()
-        self.assertIn("翻译模型：未提供", rendered)
+        self.assertNotIn("翻译模型", rendered)
         self.assertIn("发布时间（时区未确认）：unknown", rendered)
         self.assertNotIn("北京时间", rendered)
 

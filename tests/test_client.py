@@ -69,6 +69,11 @@ class ClientTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(result.items), 10)
         self.assertEqual(client._session.get.call_args.kwargs["params"]["limit"], 10)
 
+    def test_daily_quota_retry_after_preserves_full_day(self):
+        self.assertEqual(FeedClient.retry_after("86400"), 86400)
+        self.assertEqual(FeedClient.retry_after("86399"), 86399)
+        self.assertEqual(FeedClient.retry_after("1"), 1)
+
     def test_retry_after_clamped(self):
         self.assertEqual(FeedClient.retry_after("9999999"), 86400)
         self.assertEqual(FeedClient.retry_after("not-a-date"), 60)

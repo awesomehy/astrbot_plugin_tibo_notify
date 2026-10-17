@@ -164,6 +164,29 @@ class EngineTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(self.client.calls), count)
         self.assertGreater(self.engine._retry_at - time.monotonic(), 599)
 
+    async def test_daily_quota_backoff_blocks_poll_on_and_query_until_deadline(self):
+        await self.engine.subscribe(chat())
+        self.client.error = FeedError("rate_limited", 86400)
+        with patch("tibo_plugin.engine.time.monotonic", return_value=1000):
+            await self.engine.tick()
+            self.assertEqual(self.engine._retry_at, 87400)
+        requests = len(self.client.calls)
+        with patch("tibo_plugin.engine.time.monotonic", return_value=87399):
+            await self.engine.tick()
+            with self.assertRaises(FeedError) as on_error:
+                await self.engine.subscribe(chat(group="200"))
+            self.assertEqual(on_error.exception.code, "retry_pending")
+            with self.assertRaises(FeedError) as query_error:
+                await self.engine.latest(chat(), 1)
+            self.assertEqual(query_error.exception.code, "retry_pending")
+            self.assertEqual(len(self.client.calls), requests)
+            self.assertEqual(self.engine._retry_at, 87400)
+        self.client.error = None
+        with patch("tibo_plugin.engine.time.monotonic", return_value=87400):
+            await self.engine.tick()
+        self.assertEqual(len(self.client.calls), requests + 1)
+        self.assertEqual(self.engine._retry_at, 0)
+
     async def test_pagination_and_checkpoint_before_fanout(self):
         await self.engine.subscribe(chat())
         self.client.pages = [page([11], more=True), page([12])]

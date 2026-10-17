@@ -81,16 +81,27 @@ class HandlerTests(unittest.IsolatedAsyncioTestCase):
         result = await self.replies(self.plugin.query_command, Event(command="tibo 3"), "3")
         self.assertEqual(len(result), 1)
         self.assertIn("最新第 3 条", result[0])
-        self.assertTrue(result[0].startswith("【重置预告：否】"))
+        self.assertTrue(result[0].startswith("最新第 3 条\n【Codex重置预告：否】"))
+        self.assertLess(result[0].index("原文\n"), result[0].index("中文翻译\n"))
         self.assertLessEqual(len(result[0]), 3500)
         self.assertEqual(self.plugin.engine.latest.call_args.args[1], 3)
 
-    async def test_long_query_preserves_top_judgment_within_limit(self):
+    async def test_long_query_preserves_requested_order_within_limit(self):
         self.plugin.engine.latest.return_value = item(1, text="Original" * 5000, translation="中文" * 25000)
         result = await self.replies(self.plugin.query_command, Event(admin=True, command="tibo 100"), "100")
-        self.assertTrue(result[0].startswith("【重置预告：否】\n最新第 100 条"))
+        self.assertTrue(result[0].startswith("最新第 100 条\n【Codex重置预告：否】"))
+        self.assertLess(result[0].index("原文\n"), result[0].index("中文翻译\n"))
         self.assertEqual(len(result[0]), 3500)
         self.assertEqual(result[0].count("内容已截断，完整内容见链接"), 2)
+        self.assertTrue(result[0].endswith("https://x.com/tibo_maker/status/1"))
+
+    async def test_query_true_header_order(self):
+        self.plugin.engine.latest.return_value = item(1, is_reset_announcement=True, model="MODEL_MUST_NOT_APPEAR")
+        result = await self.replies(self.plugin.query_command, Event(admin=True, command="tibo 1"), "1")
+        self.assertTrue(result[0].startswith("最新第 1 条\n【Codex重置预告：是】\n\n原文\nOriginal\n\n中文翻译\n中文内容"))
+        self.assertNotIn("AI 判断", result[0])
+        self.assertNotIn("翻译模型", result[0])
+        self.assertNotIn("MODEL_MUST_NOT_APPEAR", result[0])
         self.assertTrue(result[0].endswith("https://x.com/tibo_maker/status/1"))
 
     async def test_query_allowlist_is_not_operator_permission(self):

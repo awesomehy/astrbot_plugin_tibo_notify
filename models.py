@@ -89,8 +89,8 @@ class FeedItem:
 
     def render(self, maximum: int = 3500) -> str:
         label = "是" if self.is_reset_announcement else "否"
-        header = f"【重置预告：{label}】\n\n中文翻译\n"
-        middle = "\n\n原文\n"
+        header = f"【Codex重置预告：{label}】\n\n原文\n"
+        middle = "\n\n中文翻译\n"
         try:
             published = datetime.fromisoformat(self.published_at.replace("Z", "+00:00"))
             if published.tzinfo is None:
@@ -100,8 +100,7 @@ class FeedItem:
             dates = f"发布时间（UTC）：{utc}\n北京时间（UTC+8）：{beijing}"
         except (ValueError, OverflowError):
             dates = f"发布时间（时区未确认）：{self.published_at}"
-        footer = (f"\n\n{dates}\nAI 判断仅供参考（网站已保存结果，插件未重新分析）"
-                  f"\n翻译模型：{self.model or '未提供'}\n原文链接：{self.url}")
+        footer = f"\n\n{dates}\n原文链接：{self.url}"
         marker = "…（内容已截断，完整内容见链接）"
         budget = maximum - len(header) - len(middle) - len(footer)
         if budget < len(marker) * 2:
@@ -122,8 +121,8 @@ class FeedItem:
                 return content
             return content[:allowance - len(marker)] + marker
 
-        return (header + bounded(translated, translated_budget) + middle
-                + bounded(original, original_budget) + footer)
+        return (header + bounded(original, original_budget) + middle
+                + bounded(translated, translated_budget) + footer)
 
 
 @dataclass(frozen=True)

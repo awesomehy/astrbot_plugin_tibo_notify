@@ -34,7 +34,7 @@ def _list(config, name):
     return {str(item) for item in value} if isinstance(value, list) else set()
 
 
-@register("astrbot_plugin_tibo_notify", "awesomehy", "Tibo 中文动态订阅与查询", "1.0.0")
+@register("astrbot_plugin_tibo_notify", "awesomehy", "Tibo 中文动态订阅与查询", "1.0.1")
 class TiboNotifyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
@@ -171,10 +171,9 @@ class TiboNotifyPlugin(Star):
             if item is None:
                 yield self._reply(event, f"目前没有最新第 {n} 条已完成处理的动态。")
             else:
-                position = f"\n最新第 {n} 条"
+                position = f"最新第 {n} 条\n"
                 rendered = item.render(maximum=3500 - len(position))
-                heading, separator, rest = rendered.partition("\n")
-                yield self._reply(event, heading + position + separator + rest)
+                yield self._reply(event, position + rendered)
         except FeedError as error:
             yield self._reply(event, ERRORS.get(error.code, ERRORS["local_error"]))
         except Exception:
